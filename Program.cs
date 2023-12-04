@@ -1,6 +1,5 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using AdventOfCode2023.Day00;
+using AdventOfCode2023.Day01;
 
-Console.WriteLine("Hello, World!");
-Day00.PartOne();
+Day01.PartOne();
