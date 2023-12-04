@@ -5,14 +5,18 @@
 /// </summary>
 public static class Day00
 {
-    private static readonly List<string> input = Utils.ReadFile("/Day00/example01.txt");
+    private const string inputFileName = "Day00.txt";
+    private static readonly List<string> input = Utils.ReadFile($"/Day00/{inputFileName}");
     public static void PartOne()
     {
-        Console.WriteLine("Part1");
+        Console.WriteLine("======    Day00    ======");
+        var result = 0;
+        Console.WriteLine($"Part1: {result}");
     }
 
     public static void PartTwo()
     {
-        Console.WriteLine("Part2");
+        var result = 0;
+        Console.WriteLine($"Part2: {result}");
     }
 }
