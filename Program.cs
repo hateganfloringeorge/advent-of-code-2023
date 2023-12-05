@@ -5,6 +5,7 @@ using AdventOfCode2023.Day01;
 using AdventOfCode2023.Day02;
 using AdventOfCode2023.Day03;
 using AdventOfCode2023.Day04;
+using AdventOfCode2023.Day05;
 
 /*
 Day00.PartOne();
@@ -18,7 +19,9 @@ Day02.PartTwo();
 
 Day03.PartOne();
 Day03.PartTwo();
-*/
 
 Day04.PartOne();
 Day04.PartTwo();
+*/
+
+Day05.PartOne();
