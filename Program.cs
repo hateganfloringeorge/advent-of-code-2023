@@ -11,3 +11,4 @@ Day01.PartOne();
 Day01.PartTwo();
 */
 Day02.PartOne();
+Day02.PartTwo();

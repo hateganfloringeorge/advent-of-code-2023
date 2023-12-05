@@ -50,6 +50,32 @@ public static class Day02
     public static void PartTwo()
     {
         var result = 0;
+        foreach (var line in input)
+        {
+            var maxRed = 0;
+            var maxGreen = 0;
+            var maxBlue = 0;
+            foreach (var cubesShown in line.Split(':')[1].Split(';'))
+            {
+                foreach (var cubeInfo in cubesShown.Split(','))
+                {
+                    // 0 is the empty space before ,;:
+                    var number = Convert.ToInt32(cubeInfo.Split(" ")[1]);
+                    var colour = cubeInfo.Split(" ")[2];
+
+                    switch (colour)
+                    {
+                        case "red": maxRed = Math.Max(maxRed, number); break;
+                        case "green": maxGreen = Math.Max(maxGreen, number); break;
+                        case "blue": maxBlue = Math.Max(maxBlue, number); break;
+                        default:
+                            Console.WriteLine("Parsing issue.");
+                            break;
+                    }
+                }
+            }
+            result += maxRed * maxGreen * maxBlue;
+        }
         Console.WriteLine($"Part2: {result}");
     }
 }
