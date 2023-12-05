@@ -29,6 +29,24 @@ public static class Day04
     public static void PartTwo()
     {
         var result = 0;
+        List<int> scratchcardsCounter = Enumerable.Repeat(1, input.Count).ToList();
+        for (var i = 0; i < input.Count; i++)
+        {
+            var winningSlice = input[i].Split(':')[1].Split('|')[0].Trim();
+            var winningNumbers = Regex.Split(winningSlice, "[ ]+");
+
+            var myNumbersSlice = input[i].Split(':')[1].Split('|')[1].Trim();
+            var myNumbers = Regex.Split(myNumbersSlice, "[ ]+");
+
+            var power = winningNumbers.Intersect(myNumbers).Count();
+
+            for (var j = 1; j <= power; j++)
+            {
+                scratchcardsCounter[i + j] += scratchcardsCounter[i];
+            }
+        }
+
+        result = scratchcardsCounter.Sum();
         Console.WriteLine($"Part2: {result}");
     }
 }
