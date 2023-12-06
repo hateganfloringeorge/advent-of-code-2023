@@ -25,8 +25,9 @@ Day04.PartOne();
 Day04.PartTwo();
 
 Day05.PartOne();
-Day05.PartTwo();
- */
 
 Day06.PartOne();
 Day06.PartTwo();
+ */
+
+Day05.PartTwo();
