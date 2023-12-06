@@ -29,3 +29,4 @@ Day05.PartTwo();
  */
 
 Day06.PartOne();
+Day06.PartTwo();

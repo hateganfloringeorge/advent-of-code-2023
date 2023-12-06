@@ -41,6 +41,25 @@ public static class Day06
     public static void PartTwo()
     {
         var result = 0;
+        var time = long.Parse(Regex.Replace(input[0].Split(':')[1].Trim(), "[ ]+", ""));
+        var distance = long.Parse(Regex.Replace(input[1].Split(':')[1].Trim(), "[ ]+", ""));
+
+        var stopWhenLower = false;
+        var counter = 0;
+        for (var j = 1; j < time; j++)
+        {
+            if (distance >= (time - j) * j)
+            {
+                if (stopWhenLower)
+                    break;
+            }
+            else
+            {
+                counter++;
+                stopWhenLower = true;
+            }
+        }
+        result = counter;
         Console.WriteLine($"Part2: {result}");
     }
 }
