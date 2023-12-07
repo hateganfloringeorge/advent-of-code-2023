@@ -109,7 +109,58 @@ public static class Day07
 
     public static void PartTwo()
     {
-        var result = 0;
+        var pokerHands = new List<(string, long, int)>();
+        var result = 0L;
+        foreach (string line in input)
+        {
+            var data = line.Trim().Split(' ');
+            pokerHands.Add((data[0], long.Parse(data[1]), GetHandTypeWithJoker(data[0])));
+        }
+
+        cardsMap['J'] = 0;
+        pokerHands.Sort(CompareHands);
+
+        for (int i = 0; i < pokerHands.Count; i++)
+        {
+            var (_, value, _) = pokerHands[i];
+            result += (i + 1) * value;
+        }
         Console.WriteLine($"Part2: {result}");
+    }
+
+    private static int GetHandTypeWithJoker(string hand)
+    {
+        if (hand.Contains('J'))
+        {
+            var appearances = hand.Count(x => x == 'J');
+            hand = Regex.Replace(hand, "J", "");
+            var partialType = GetHandType(hand);
+            switch (appearances)
+            {
+                case 5:
+                case 4:
+                    return 6;
+                
+                case 3:
+                    if (partialType == 1) return 6;
+                    return 5;
+                
+                case 2:
+                    if (partialType == 3) return 6;
+                    if (partialType == 1) return 5;
+                    return 3;
+                
+                case 1:
+                    if (partialType == 5) return 6;
+                    if (partialType == 3) return 5;
+                    if (partialType == 2) return 4;
+                    if (partialType == 1) return 3;
+                    return 1;
+                default:
+                    throw new Exception("Something went wrong");
+            }
+        }
+
+        return GetHandType(hand);
     }
 }
