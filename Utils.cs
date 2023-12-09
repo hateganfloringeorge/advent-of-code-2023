@@ -18,4 +18,13 @@ public static class Utils
         }
         return matrix;
     }
+
+    public static long ChangeSign(int minusOnePower)
+    {
+        if (minusOnePower % 2 == 0)
+        {
+            return 1;
+        }
+        return -1;
+    }
 }

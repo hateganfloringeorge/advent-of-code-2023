@@ -38,6 +38,8 @@ Day07.PartTwo();
 
 Day08.PartOne();
 Day08.PartTwo();
- */
 
 Day09.PartOne();
+ */
+
+Day09.PartTwo();
