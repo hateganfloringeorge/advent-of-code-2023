@@ -27,4 +27,11 @@ public static class Utils
         }
         return -1;
     }
+
+    public static (T, T) AddTuples<T>((T, T) tuple1, (T, T) tuple2) where T : struct
+    {
+        dynamic firstTuple = (dynamic)tuple1;
+        dynamic secondTuple = (dynamic)tuple2;
+        return (firstTuple.Item1 + secondTuple.Item1, firstTuple.Item2 + secondTuple.Item2);
+    }
 }
