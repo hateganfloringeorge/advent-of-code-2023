@@ -59,7 +59,7 @@ public static class Utils
         }
     }
 
-    public static void PrintMatrix(List<List<char>> matrix)
+    public static void PrintMatrix<T>(List<List<T>> matrix)
     {
         foreach (var row in matrix)
         {
