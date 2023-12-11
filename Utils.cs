@@ -99,4 +99,15 @@ public static class Utils
         }
         return column;
     }
+
+    public static List<List<T>> CreateMatrix<T>(int M, int N, T defaultValue) where T : struct
+    {
+        var matrix = new List<List<T>>();
+        for (var i = 0; i < M; i++)
+        {
+            matrix.Add(Enumerable.Repeat(defaultValue, N).ToList());
+        }
+
+        return matrix;
+    }
 }
