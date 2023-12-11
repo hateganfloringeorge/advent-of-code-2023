@@ -34,4 +34,16 @@ public static class Utils
         dynamic secondTuple = (dynamic)tuple2;
         return (firstTuple.Item1 + secondTuple.Item1, firstTuple.Item2 + secondTuple.Item2);
     }
+
+    public static void PrintMatrix(char[][] matrix)
+    {
+        foreach(var row in matrix)
+        {
+            foreach(var col in row)
+            {
+                Console.Write(col);
+            }
+            Console.WriteLine();
+        }
+    }
 }
