@@ -8,6 +8,18 @@ public static class Utils
         return File.ReadAllLines(path).ToList();
     }
 
+    public static List<List<char>> ToCharMatrix(string path)
+    {
+        var matrix = new List<List<char>>();
+        var lines = ReadFile(path);
+        foreach (var line in lines)
+        {
+            matrix.Add(line.ToCharArray().ToList());
+        }
+        
+        return matrix;
+    }
+
     public static char[][] ToCharMatrix(List<string> list)
     {
         var matrix = new char[list.Count][];
@@ -45,5 +57,46 @@ public static class Utils
             }
             Console.WriteLine();
         }
+    }
+
+    public static void PrintMatrix(List<List<char>> matrix)
+    {
+        foreach (var row in matrix)
+        {
+            foreach (var col in row)
+            {
+                Console.Write(col);
+            }
+            Console.WriteLine();
+        }
+    }
+
+    public static List<T> GetRow<T>(List<List<T>> list, int index) where T : struct
+    {
+        if (index < list.Count)
+        {
+            return list[index];
+        }
+        else
+        {
+            throw new Exception("Something went wrong");
+        }
+    }
+
+    public static List<T> GetColumn<T>(List<List<T>> list, int index) where T : struct
+    {
+        var column = new List<T>();
+        foreach (var row in list)
+        {
+            if (index < row.Count)
+            {
+                column.Add(row[index]);
+            }
+            else
+            {
+                throw new Exception("Something went wrong");
+            }
+        }
+        return column;
     }
 }
