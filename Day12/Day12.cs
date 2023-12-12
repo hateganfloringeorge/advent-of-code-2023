@@ -4,8 +4,9 @@
 public static class Day12
 {
     private const string inputFileName = "Day12.txt";
-    private static readonly List<string> input = Utils.ReadFile($"/Day12/{ConstantValues.EXAMPLE2}");
+    private static readonly List<string> input = Utils.ReadFile($"/Day12/{inputFileName}");
     private static List<int> numbersList = new List<int>();
+    private static Dictionary<(string, int), long> alreadyCompuedCombinations = new Dictionary<(string, int), long>();
 
 
     public static void PartOne()
@@ -127,14 +128,10 @@ public static class Day12
             state.Append('.');
 
             Console.WriteLine(state);
-            foreach (var x in numbersList)
-            {
-                Console.Write(x + " ");
-            }
-            Console.WriteLine();
             var number = OptimizedRecursion(state.ToString(), 0, numbersList.Sum());
             Console.WriteLine(number);
 
+            alreadyCompuedCombinations.Clear();
             result += number;
         }
         stopwatch.Stop();
@@ -158,8 +155,15 @@ public static class Day12
             return 1;
         }
 
+        // save already computed results optimization
+        if (alreadyCompuedCombinations.ContainsKey((state, numbersIndex)))
+        {
+            return alreadyCompuedCombinations[(state, numbersIndex)];
+        }
+
         var i = 0;
         var newStringIndex = 0;
+        var newNumbersIndex = numbersIndex;
         var consecutiveAppearances = 0;
 
         while (i < state.Length)
@@ -169,7 +173,7 @@ public static class Day12
                 case '#':
                     consecutiveAppearances++;
                     // too many hashtags optimization 
-                    if (numbersIndex >= numbersList.Count || consecutiveAppearances > numbersList[numbersIndex])
+                    if (newNumbersIndex >= numbersList.Count || consecutiveAppearances > numbersList[newNumbersIndex])
                     {
                         return 0;
                     }
@@ -178,10 +182,10 @@ public static class Day12
                 case '.':
                     if (consecutiveAppearances > 0)
                     {
-                        if (numbersIndex < numbersList.Count && numbersList[numbersIndex] == consecutiveAppearances)
+                        if (newNumbersIndex < numbersList.Count && numbersList[newNumbersIndex] == consecutiveAppearances)
                         {
-                            remainingHashtagsSum -= numbersList[numbersIndex];
-                            numbersIndex++;
+                            remainingHashtagsSum -= numbersList[newNumbersIndex];
+                            newNumbersIndex++;
                             consecutiveAppearances = 0;
                             newStringIndex = i;
                         }
@@ -199,29 +203,37 @@ public static class Day12
                     long hashtag;
 
                     // too many hashtags optimization
-                    if (numbersIndex >= numbersList.Count || (consecutiveAppearances > 0 && consecutiveAppearances + 1 > numbersList[numbersIndex]))
+                    if (numbersIndex >= numbersList.Count || (consecutiveAppearances > 0 && consecutiveAppearances + 1 > numbersList[newNumbersIndex]))
                     {
                         hashtag = 0;
                     }
                     else
                     {
-                        hashtag = OptimizedRecursion(newState.ToString(newStringIndex, newState.Length - newStringIndex), numbersIndex, remainingHashtagsSum);
+                        hashtag = OptimizedRecursion(newState.ToString(newStringIndex, newState.Length - newStringIndex), newNumbersIndex, remainingHashtagsSum);
                     }
 
                     // dot case
                     if (consecutiveAppearances > 0)
                     {
-                        if (numbersIndex < numbersList.Count && numbersList[numbersIndex] == consecutiveAppearances)
+                        if (numbersIndex < numbersList.Count && numbersList[newNumbersIndex] == consecutiveAppearances)
                         {
-                            remainingHashtagsSum -= numbersList[numbersIndex];
-                            numbersIndex++;
+                            remainingHashtagsSum -= numbersList[newNumbersIndex];
+                            newNumbersIndex++;
                         }
                         else
                         {
+
                             return hashtag;
                         }
                     }
-                    return hashtag + OptimizedRecursion(newState.ToString(i + 1, newState.Length - i - 1), numbersIndex, remainingHashtagsSum);
+                    
+                    // dot + hashtag outcomes
+                    var combination = hashtag + OptimizedRecursion(newState.ToString(i + 1, newState.Length - i - 1), newNumbersIndex, remainingHashtagsSum);
+                    
+                    // save already computed results optimization
+                    alreadyCompuedCombinations[(state, numbersIndex)] = combination;
+                    
+                    return combination;
                 
                 default:
                     throw new Exception("Something went really wrong");
