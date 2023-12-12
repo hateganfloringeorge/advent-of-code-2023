@@ -49,7 +49,9 @@ Day10.PartOne();
 Day10.PartTwo();
 
 Day11.PartOno();
-Day11.PartTwo(); 
- */
+Day11.PartTwo();
 
 Day12.PartOne();
+ */
+
+Day12.PartTwo();

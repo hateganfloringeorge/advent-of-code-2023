@@ -4,16 +4,19 @@
 public static class Day12
 {
     private const string inputFileName = "Day12.txt";
-    private static readonly List<string> input = Utils.ReadFile($"/Day12/{inputFileName}");
+    private static readonly List<string> input = Utils.ReadFile($"/Day12/{ConstantValues.EXAMPLE2}");
     private static List<int> numbersList = new List<int>();
-
 
 
     public static void PartOne()
     {
         Console.WriteLine("======    Day12    ======");
         var result = 0L;
-        foreach (var line in input )
+
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.Start();
+
+        foreach (var line in input)
         {
             var state = line.Trim().Split(' ')[0];
             numbersList = line.Trim().Split(' ')[1].Split(',').Select(int.Parse).ToList();
@@ -21,6 +24,11 @@ public static class Day12
             var number = PlainRecursion(state);
             result += number;
         }
+
+        stopwatch.Stop();
+        TimeSpan elapsedTime = stopwatch.Elapsed;
+        Console.WriteLine(elapsedTime);
+        
         Console.WriteLine($"Part1: {result}");
     }
 
@@ -88,11 +96,142 @@ public static class Day12
         return 1;
     }
 
+    // TODO try to save partial results/some sort of grouping to optimize example 2
+    // TODO try to look into permutations
+    // TODO if nothing works change approach and try to optimize part 1
     public static void PartTwo()
     {
-        var result = 0;
+        var result = 0L;
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.Start();
+
+        foreach (var line in input)
+        {
+            const int multiplier = 5;
+            var initialState = line.Trim().Split(' ')[0];
+            var initialList = line.Trim().Split(' ')[1].Split(',').Select(int.Parse).ToList();
+
+            // remove unnecessary dots optimization
+            initialState = Regex.Replace(initialState, @"\.+", ".");
+
+            // expand numbers input
+            numbersList = Enumerable.Repeat(initialList, multiplier).SelectMany(x => x).ToList();
+
+            // expand string
+            StringBuilder state = new StringBuilder(initialState);
+            for (int i = 0; i < multiplier - 1; i++)
+            {
+                state.Append('?');
+                state.Append(initialState);
+            }
+            state.Append('.');
+
+            Console.WriteLine(state);
+            foreach (var x in numbersList)
+            {
+                Console.Write(x + " ");
+            }
+            Console.WriteLine();
+            var number = OptimizedRecursion(state.ToString(), 0, numbersList.Sum());
+            Console.WriteLine(number);
+
+            result += number;
+        }
+        stopwatch.Stop();
+        TimeSpan elapsedTime = stopwatch.Elapsed;
+        Console.WriteLine(elapsedTime);
+
         Console.WriteLine($"Part2: {result}");
     }
 
+    private static long OptimizedRecursion(string state, int numbersIndex, int remainingHashtagsSum)
+    {
+        // sum optimization
+        if (state.Length < remainingHashtagsSum + numbersList.Count - numbersIndex)
+            return 0;
 
+        // no more numbers optimization
+        if (remainingHashtagsSum == 0)
+        {
+            if (state.Contains("#"))
+                return 0;
+            return 1;
+        }
+
+        var i = 0;
+        var newStringIndex = 0;
+        var consecutiveAppearances = 0;
+
+        while (i < state.Length)
+        {
+            switch (state[i])
+            {
+                case '#':
+                    consecutiveAppearances++;
+                    // too many hashtags optimization 
+                    if (numbersIndex >= numbersList.Count || consecutiveAppearances > numbersList[numbersIndex])
+                    {
+                        return 0;
+                    }
+                    break;
+
+                case '.':
+                    if (consecutiveAppearances > 0)
+                    {
+                        if (numbersIndex < numbersList.Count && numbersList[numbersIndex] == consecutiveAppearances)
+                        {
+                            remainingHashtagsSum -= numbersList[numbersIndex];
+                            numbersIndex++;
+                            consecutiveAppearances = 0;
+                            newStringIndex = i;
+                        }
+                        else
+                        {
+                            return 0;
+                        }
+                    }
+                    break;
+
+                case '?':
+                    // hashtag case
+                    StringBuilder newState = new StringBuilder(state);
+                    newState[i] = '#';
+                    long hashtag;
+
+                    // too many hashtags optimization
+                    if (numbersIndex >= numbersList.Count || (consecutiveAppearances > 0 && consecutiveAppearances + 1 > numbersList[numbersIndex]))
+                    {
+                        hashtag = 0;
+                    }
+                    else
+                    {
+                        hashtag = OptimizedRecursion(newState.ToString(newStringIndex, newState.Length - newStringIndex), numbersIndex, remainingHashtagsSum);
+                    }
+
+                    // dot case
+                    if (consecutiveAppearances > 0)
+                    {
+                        if (numbersIndex < numbersList.Count && numbersList[numbersIndex] == consecutiveAppearances)
+                        {
+                            remainingHashtagsSum -= numbersList[numbersIndex];
+                            numbersIndex++;
+                        }
+                        else
+                        {
+                            return hashtag;
+                        }
+                    }
+                    return hashtag + OptimizedRecursion(newState.ToString(i + 1, newState.Length - i - 1), numbersIndex, remainingHashtagsSum);
+                
+                default:
+                    throw new Exception("Something went really wrong");
+            }
+            i++;
+        };
+
+        if (remainingHashtagsSum == 0)
+            return 1;
+
+        return 0;
+    }
 }
