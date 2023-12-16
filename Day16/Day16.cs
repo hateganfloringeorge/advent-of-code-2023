@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace AdventOfCode2023.Day16;
+﻿namespace AdventOfCode2023.Day16;
 
 
 public static class Day16
@@ -21,19 +19,51 @@ public static class Day16
         (0, 1),
         (0, -1),
     };
+    private static readonly int M = input.Count;
+    private static readonly int N = input[0].Count;
 
     public static void PartOne()
     {
         Console.WriteLine("======    Day16    ======");
+        var result = ComputeEnergizedTiles((Direction.E, (0, 0)));
+        Console.WriteLine($"Part1: {result}");
+    }
+
+    public static void PartTwo()
+    {
         var result = 0L;
-        var M = input.Count;
-        var N = input[0].Count;
+
+        var entryBeams = new List<(Direction, (int, int))>();
+        // left and right edge
+        for (int i = 0; i < M; i++)
+        {
+            entryBeams.Add((Direction.E, (i, 0)));
+            entryBeams.Add((Direction.W, (i, N - 1)));
+        }
+
+        // top and bottom edge
+        for (int j = 0; j < N; j++)
+        {
+            entryBeams.Add((Direction.S, (0, j)));
+            entryBeams.Add((Direction.N, (j, M - 1)));
+        }
+
+        foreach (var beam in entryBeams)
+        {
+            result = Math.Max(result, ComputeEnergizedTiles(beam));
+        }
+        Console.WriteLine($"Part2: {result}");
+    }
+
+    private static long ComputeEnergizedTiles((Direction, (int, int)) startingbeam)
+    {
+        var result = 0L;
         var energizedMap = Utils.CreateMatrix(M, N, '.');
 
         var beams = new List<(Direction, (int, int))>();
         var newBeams = new List<(Direction, (int, int))>()
         {
-            (Direction.E, (0, 0))
+            startingbeam
         };
         var alreadyPassedBeams = new List<(Direction, (int, int))>();
 
@@ -44,7 +74,7 @@ public static class Day16
             foreach (var beam in beams)
             {
                 var (currDirection, (row, col)) = beam;
-                if (row >= 0 && col >= 0 && row < M && col < N) 
+                if (row >= 0 && col >= 0 && row < M && col < N)
                 {
                     alreadyPassedBeams.Add((currDirection, (row, col)));
                     energizedMap[row][col] = '#';
@@ -53,7 +83,6 @@ public static class Day16
                     {
                         case '.':
                             newDirections.Add(currDirection);
-                            //newBeams.Add((currDirection, (row + offset[(int)currDirection].Item1, col + offset[(int)currDirection].Item2)));
                             break;
 
                         case '-':
@@ -96,7 +125,7 @@ public static class Day16
                                     newDirections.Add(Direction.N);
                                     break;
                             }
-                            break; 
+                            break;
 
                         case '\\':
                             switch (currDirection)
@@ -134,19 +163,10 @@ public static class Day16
         }
 
         // compute result
-        /*Console.WriteLine();
-        Utils.PrintMatrix(energizedMap);*/
         foreach (var line in energizedMap)
         {
             result += line.Count(c => c == '#');
         }
-
-        Console.WriteLine($"Part1: {result}");
-    }
-
-    public static void PartTwo()
-    {
-        var result = 0;
-        Console.WriteLine($"Part2: {result}");
+        return result;
     }
 }
