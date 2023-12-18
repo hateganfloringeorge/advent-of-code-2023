@@ -110,4 +110,19 @@ public static class Utils
 
         return matrix;
     }
+
+    public enum Direction
+    {
+        N = 0,
+        E = 1,
+        S = 2,
+        W = 3
+    }
+
+    public static readonly List<(int, int)> directionOffset = [
+        (-1, 0),
+        (0, 1),
+        (1, 0),
+        (0, -1),
+    ];
 }
