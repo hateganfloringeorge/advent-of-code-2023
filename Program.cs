@@ -80,4 +80,4 @@ Day18.PartOne();
 Day18.PartTwo();
  */
 
-Day19.PartOne();
+Day19.PartTwo();
