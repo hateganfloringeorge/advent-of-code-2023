@@ -1,4 +1,7 @@
-﻿namespace AdventOfCode2023.Day21;
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace AdventOfCode2023.Day21;
 
 public static class Day21
 {
@@ -59,7 +62,75 @@ public static class Day21
     public static void PartTwo()
     {
         var result = 0L;
-        ((int, int),(int, int)) startingPoint = ((-1, -1), (-1, -1));
+        (int, int, int, int) startingPoint = (-1, -1, -1, -1);
+        var possibleOffsets = new Dictionary<(int, int), HashSet<(int, int, int, int)>>();
+        for (int i = 0; i < M; i++)
+        {
+            for (int j = 0; j < N; j++)
+            {
+                if (input[i][j] == '#')
+                {
+                    continue;
+                }
+                else
+                {
+                    possibleOffsets[(i, j)] = new HashSet<(int, int, int, int)>();
+                    
+                    // adapt part 1
+                    var newPoints = new HashSet<(int, int, int, int)>() { (i, j, 0, 0) };
+                    HashSet<(int, int, int, int)> currentPoints;
+                    int numberOfIterations = 2;
+                    for (int k = 0; k < numberOfIterations; k++)
+                    {
+                        currentPoints = newPoints;
+                        newPoints = new HashSet<(int, int, int, int)>();
+                        foreach (var (row, col, offsetImgRow, offsetImgCol) in currentPoints)
+                        {
+                            for (int l = 0; l < 4; l++)
+                            {
+                                int newRow = directionOffset[l].Item1 + row;
+                                int newCol = directionOffset[l].Item2 + col;
+                                int newImgRow = offsetImgRow;
+                                int newImgCol = offsetImgCol;
+                                if (!(newRow >= 0 && newCol >= 0 && newRow < M && newCol < N))
+                                {
+                                    switch (l)
+                                    {
+                                        // N
+                                        case 0:
+                                            newRow = M - 1;
+                                            newImgRow -= 1;
+                                            break;
+                                        // E
+                                        case 1:
+                                            newCol = 0;
+                                            newImgCol += 1;
+                                            break;
+                                        // S
+                                        case 2:
+                                            newRow = 0;
+                                            newImgRow += 1;
+                                            break;
+                                        // W
+                                        case 3:
+                                            newCol = N - 1;
+                                            newImgCol -= 1;
+                                            break;
+                                        default:
+                                            throw new Exception("Something went wrong");
+                                    }
+                                }
+                                if (input[newRow][newCol] != '#' && (newRow != i || newCol != j))
+                                {
+                                    newPoints.Add(((newRow, newCol, newImgRow, newImgCol)));
+                                }
+                            }
+                        }
+                    }
+                    possibleOffsets[(i, j)] = newPoints;
+                }
+            }
+        }
 
         // find S
         for (int i = 0; i < M; i++)
@@ -68,99 +139,75 @@ public static class Day21
             {
                 if (input[i][j] == 'S')
                 {
-                    startingPoint = ((i, j), (0, 0));
+                    startingPoint = (i, j, 0, 0);
                 }
             }
         }
 
-        // remember only the outer layer as the interior will be the same just alternate
-        var previousOddPoints = new HashSet<((int, int), (int, int))>() {};
-        var previousEvenPoints = new HashSet<((int, int), (int, int))>() { startingPoint };
-        long oddIterationsTotal = previousOddPoints.Count;
-        long evenIterationsTotal = previousEvenPoints.Count;
-
-        var newIterationPoints = new HashSet<((int, int), (int, int))>();
-
-        int numberOfSteps = 26501365;
-        for (iteration = 1; iteration <= numberOfSteps; iteration++)
+        long numberOfSteps = 4;
+        HashSet<(int, int, int, int)> currentElements;
+        HashSet<(int, int, int, int)> previousElements;
+        HashSet<(int, int, int, int)> nextElements = new HashSet<(int, int, int, int)>();
+        if (numberOfSteps % 2 == 0) 
         {
-            HashSet<((int, int), (int, int))> currentIteration;
-            HashSet<((int, int), (int, int))> previousIteration;
-            if (iteration % 2 == 0)
-            {
-                previousIteration = previousEvenPoints;
-                currentIteration = previousOddPoints;
-            }
-            else
-            {
-                previousIteration = previousOddPoints;
-                currentIteration = previousEvenPoints;
-            }
+            iteration = 0;
+            result = 1;
+            nextElements.Add(startingPoint);
+        }
+        else
+        {
+            iteration = 1;
+            result = 2;
 
-            foreach (((int row, int col),(int imgRow,int imgCol)) in currentIteration)
+            var (row, col, _, _) = startingPoint;
+            for (int i = 0; i < 4; i++)
             {
-                for (int i = 0; i < 4; i++)
+                // should add handler for edge cases
+                var newRow = directionOffset[i].Item1 + row;
+                var newCol = directionOffset[i].Item2 + col;
+                if (newRow >= 0 && newCol >= 0 && newRow < M && newCol < N && input[newRow][newCol] != '#')
                 {
-                    int newRow = directionOffset[i].Item1 + row;
-                    int newCol = directionOffset[i].Item2 + col;
-                    int newImgRow = imgRow;
-                    int newImgCol = imgCol;
-                    if (!(newRow >= 0 && newCol >= 0 && newRow < M && newCol < N))
+                    nextElements.Add((newRow, newCol, 0, 0));
+                }
+            }
+        }
+
+        Console.WriteLine("Clock started");
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.Start();
+
+        // remember only the outer layer as the interior will be the same just alternate
+        for (; iteration < numberOfSteps; iteration = iteration + 2)
+        {
+            currentElements = nextElements;
+            previousElements = nextElements;
+            nextElements = new HashSet<(int, int, int, int)>();
+            foreach ((int row, int col, int imgRow, int imgCol) in currentElements)
+            {
+                foreach((int newRow, int newCol, int offsetRow, int offsetCol) in possibleOffsets[(row, col)])
+                {
+                    var newImgRow = offsetRow + imgRow;
+                    var newImgCol = offsetCol + imgCol;
+                    if (!previousElements.Contains((newRow, newCol, newImgRow, newImgCol)))
                     {
-                        switch (i)
-                        {
-                            // N
-                            case 0:
-                                newRow = M - 1;
-                                newImgRow -= 1;
-                                break;
-                            // E
-                            case 1:
-                                newCol = 0;
-                                newImgCol += 1;
-                                break;
-                            // S
-                            case 2:
-                                newRow = 0;
-                                newImgRow += 1;
-                                break;
-                            // W
-                            case 3:
-                                newCol = N - 1;
-                                newImgCol -= 1;
-                                break;
-                            default:
-                                throw new Exception("Something went wrong");
-                        }
-                    }
-                    if (input[newRow][newCol] != '#' && !previousIteration.Contains(((newRow, newCol),(newImgRow, newImgCol))))
-                    {
-                        newIterationPoints.Add(((newRow, newCol), (newImgRow, newImgCol)));
+                        nextElements.Add((newRow, newCol, newImgRow, newImgCol));
                     }
                 }
             }
+            result += nextElements.Count();
 
-            if (iteration % 2 == 0)
-            {
-                previousEvenPoints = newIterationPoints;
-                evenIterationsTotal += newIterationPoints.Count;
-                //Console.WriteLine($"I:{iteration} total:{evenIterationsTotal}");
-                if (iteration == numberOfSteps)
-                    result = evenIterationsTotal;
-            }
-            else
-            {
-                previousOddPoints = newIterationPoints;
-                oddIterationsTotal += newIterationPoints.Count;
-                //Console.WriteLine($"I:{iteration} total:{oddIterationsTotal}");
-                if (iteration == numberOfSteps)
-                    result = evenIterationsTotal;
-            }
-            newIterationPoints = new HashSet<((int, int), (int, int))>();
-            if (iteration % 5000 == 0)
-            {
+/*            if (iteration % 5000 == 0)
+            {*/
                 Console.WriteLine(iteration);
-            }
+/*            }*/
+        }
+
+        stopwatch.Stop();
+        TimeSpan elapsedTime = stopwatch.Elapsed;
+        Console.WriteLine(elapsedTime + " " + elapsedTime * 5300);
+        if (result != 16733044)
+        {
+            Console.WriteLine("Wrong result!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         }
 
         Console.WriteLine($"Part2: {result}");
