@@ -22,6 +22,7 @@ using AdventOfCode2023.Day18;
 using AdventOfCode2023.Day19;
 using AdventOfCode2023.Day20;
 using AdventOfCode2023.Day21;
+using AdventOfCode2023.Day23;
 
 /*
 Day00.PartOne();
@@ -88,6 +89,7 @@ Day20.PartOne();
 Day20.PartTwo();
 
 Day21.PartOne();
- */
-
 Day21.PartTwo();
+*/
+
+Day23.PartOne();
