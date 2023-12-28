@@ -1,4 +1,6 @@
-﻿namespace AdventOfCode2023.Day20;
+﻿using System.Xml.XPath;
+
+namespace AdventOfCode2023.Day20;
 
 public static class Day20
 {
@@ -90,6 +92,8 @@ public static class Day20
     private abstract class Module()
     {
         public string Name { get; set; }
+        public long lowPulsesCounter = 0;
+        public long highPulsesCounter = 0;
         public List<string> Outputs { get; set; }
 
         // for conjunction is memory
@@ -102,6 +106,22 @@ public static class Day20
         {
             Name = name;
             Outputs = outputs;
+        }
+
+        public void ResetToInitialState()
+        {
+            for (int i = 0; i < states.Count; i++)
+            {
+                states[i] = false;
+                
+            }
+            ResetCounters();
+        }
+
+        public void ResetCounters()
+        {
+            lowPulsesCounter = 0;
+            highPulsesCounter = 0;
         }
     }
 
@@ -137,12 +157,18 @@ public static class Day20
 
     private class ConjunctionModule(string name, List<string> outputs) : Module(name, outputs)
     {
+        
         public Dictionary<string, int> inputIndexes = new Dictionary<string, int>();
 
         public void AddNodeToMemory(string nodeName)
         {
             states.Add(LowPulse);
             inputIndexes.Add(nodeName, states.Count - 1);
+        }
+
+        internal bool HasStartedMachine()
+        {
+            return highPulsesCounter == 1;
         }
 
         public override void ProcessPulse(bool pulseType, string pulseOrigin)
@@ -157,10 +183,12 @@ public static class Day20
 
             if (newPulseType)
             {
+                highPulsesCounter += 1;
                 totalHighPulses += Outputs.Count;
             }
             else
             {
+                lowPulsesCounter += 1;
                 totalLowPulses += Outputs.Count;
             }
 
@@ -200,11 +228,15 @@ public static class Day20
     }
 
     // brute force didn't work or at least I didn't have patience to wait for it
-    private class FinishModule(string name, List<string> outputs) : Module(name, outputs)
+    private class FinishModule : Module
     {
         long iteration = 1;
-        long lowPulsesCounter = 0;
-        long highPulsesCounter = 0;
+        public Module previousModule;
+
+        public FinishModule(string name, List<string> outputs, string previousName) : base(name, outputs)
+        {
+            previousModule = nodeMap[previousName];
+        }
 
         public override void ProcessPulse(bool pulseType, string pulseOrigin)
         {
@@ -220,7 +252,7 @@ public static class Day20
 
         public void PrintCoutner()
         {
-            Console.WriteLine($"H:{highPulsesCounter} L:{lowPulsesCounter}");
+            //Console.WriteLine($"H:{highPulsesCounter} L:{lowPulsesCounter}");
         }
         
         public void ResetCounters()
@@ -228,7 +260,7 @@ public static class Day20
             iteration += 1;
             if (iteration % 1000000 == 0)
             {
-                Console.WriteLine(iteration);
+                //Console.WriteLine(iteration);
             }
             lowPulsesCounter = 0;
             highPulsesCounter = 0;
@@ -274,6 +306,7 @@ public static class Day20
         // add end nodes
         foreach (var line in input)
         {
+            var input = line.Split("->")[0].Trim()[1..];
             var outputs = line.Split("->")[1].Replace(" ", "").Split(",").ToList();
             foreach (var output in outputs)
             {
@@ -281,7 +314,7 @@ public static class Day20
                 {
                     if (output == EndNodeName)
                     {
-                        nodeMap[output] = new FinishModule(output, new List<string>());
+                        nodeMap[output] = new FinishModule(output, new List<string>(), input);
                     }
                     else
                     {
@@ -303,31 +336,75 @@ public static class Day20
             }
         }
 
-        // no need for loop checking as it was only 1000
-        while (true)
+        // sadly I did not manage a solid general solution so I made one based on input
+        // it ended in such a very very messy code, I am hesitant to make a commit
+        List<long> numbersToFindLCM = new List<long>();
+        var secondToLastNode = ((FinishModule)nodeMap[EndNodeName]).previousModule;
+        foreach (var name in ((ConjunctionModule)secondToLastNode).inputIndexes.Keys)
         {
-            newPulsesSent.Add((false, nodeMap["broadcaster"], ""));
-            totalLowPulses += 1;
+            var cycleLength = 0L;
 
-            while (newPulsesSent.Count > 0)
+            // reset to initial state
+            for (var i = 0; i < nodeMap.Count; i++)
             {
-                var pulsesToProcess = newPulsesSent;
-                newPulsesSent = new List<(bool, Module, string)>();
-                foreach (var (pulseType, module, origin) in pulsesToProcess)
+                nodeMap.ElementAt(i).Value.ResetToInitialState();
+            }
+
+            while (true)
+            {
+                newPulsesSent.Add((false, nodeMap["broadcaster"], ""));
+
+                cycleLength += 1;
+                while (newPulsesSent.Count > 0)
                 {
-                    module.ProcessPulse(pulseType, origin);
+                    var pulsesToProcess = newPulsesSent;
+                    newPulsesSent = new List<(bool, Module, string)>();
+                    foreach (var (pulseType, module, origin) in pulsesToProcess)
+                    {
+                        module.ProcessPulse(pulseType, origin);
+                    }
+                }
+                
+                var finishNode = (ConjunctionModule)nodeMap[name];
+                if (finishNode.HasStartedMachine())
+                {
+                    break;
                 }
             }
-
-            var finishNode = (FinishModule)nodeMap[EndNodeName];
-            if (finishNode.HasStartedMachine())
-            {
-                break;
-            }
-            finishNode.ResetCounters();
+            numbersToFindLCM.Add(cycleLength);
         }
 
-        var result = ((FinishModule)nodeMap[EndNodeName]).GetResult();
+        foreach (var cycleLength in numbersToFindLCM)
+        {
+            Console.WriteLine($"CL: {cycleLength}");
+        }
+
+        var result = numbersToFindLCM[0];
+        for (int i = 1; i < numbersToFindLCM.Count; i++)
+        {
+            result = CalculateLCM(result, numbersToFindLCM[i]);
+        }
+
         Console.WriteLine($"Part2: {result}");
     }
+
+    static long CalculateGCD(long a, long b)
+        {
+            while (b != 0)
+            {
+                long temp = b;
+                b = a % b;
+                a = temp;
+            }
+            return a;
+        }
+
+        static long CalculateLCM(long a, long b)
+        {
+            // Avoid division by zero
+            if (a == 0 || b == 0)
+                return 0;
+
+            return Math.Abs(a * b) / CalculateGCD(a, b);
+        }
 }
