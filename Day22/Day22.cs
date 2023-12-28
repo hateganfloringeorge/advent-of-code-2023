@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace AdventOfCode2023.Day22;
 
 
@@ -71,6 +73,7 @@ public static class Day22
         }
 
         public int Z {get; set;}
+        public int index;
         public List<(int, int)> LevelPoints = new List<(int, int)>();
         public HashSet<Shapes3D> ShapesOnTop {get; set;} = new HashSet<Shapes3D>();
         public HashSet<Shapes3D> ShapesUnderneath {get; set;} = new HashSet<Shapes3D>();
@@ -124,7 +127,7 @@ public static class Day22
             }
         }
 
-        private bool IsSomethingUnder()
+        public bool IsSomethingUnder()
         {
             foreach (var (row, col) in LevelPoints)
             {
@@ -153,6 +156,22 @@ public static class Day22
             }
 
             return true;
+        }
+
+        public bool Equals(Shapes3D? x, Shapes3D? y)
+        {
+            if (ReferenceEquals(x, y))
+                return true;
+
+            if (x is null || y is null)
+                return false;
+
+            return x.Z == y.Z && x.LevelPoints.SequenceEqual(y.LevelPoints);
+        }
+
+        public int GetHashCode([DisallowNull] Shapes3D obj)
+        {
+            return obj.LevelPoints.GetHashCode();
         }
     }
 
@@ -239,7 +258,73 @@ public static class Day22
 
     public static void PartTwo()
     {
-        var result = 0;
+        var result = 0L;
+        var fallingShapes = new List<Shapes3D>();
+        // create shapes
+        foreach (var line in input)
+        {
+            var firstPoint = line.Split('~')[0].Split(',').Select(int.Parse).ToList();
+            var secondPoint = line.Split('~')[1].Split(',').Select(int.Parse).ToList();
+            
+            if (firstPoint.SequenceEqual(secondPoint))
+            {
+                fallingShapes.Add(new Point(firstPoint));
+            } 
+            else if (firstPoint[0] == secondPoint[0])
+            {
+                if (firstPoint[1] == secondPoint[1])
+                {
+                    // different z
+                    fallingShapes.Add(new LineZ(firstPoint, secondPoint[2] - firstPoint[2]));
+                }
+                else
+                {
+                    // different y
+                    fallingShapes.Add(new LineY(firstPoint, secondPoint[1]));
+                }
+            }
+            else 
+            {
+                // different x
+                fallingShapes.Add(new LineX(firstPoint, secondPoint[0]));
+            }
+        }
+
+        // sort by Z
+        fallingShapes.Sort((a,b) => a.Z.CompareTo(b.Z));
+        
+        // fall to the ground
+        for (var i = 0; i < fallingShapes.Count; i++)
+        {
+            var shape = fallingShapes[i];
+            shape.FallToTheGround();
+            shape.index = i;
+        }
+
+
+        // check supporting bricks
+        for (var i = 0; i < fallingShapes.Count; i++)
+        {
+            if (!fallingShapes[i].CanBeDesintegrated())
+            {
+                Queue<Shapes3D> shapesToCheck = new Queue<Shapes3D>() {};
+                HashSet<int> chainIndexes = [i];
+                shapesToCheck.Enqueue(fallingShapes[i]);
+                while (shapesToCheck.TryDequeue(out var shape))
+                {
+                    foreach (var shapeOnTop in shape.ShapesOnTop)
+                    {
+                        if (!chainIndexes.Contains(shapeOnTop.index) && shapeOnTop.ShapesUnderneath.Where(shape => !chainIndexes.Contains(shape.index)).ToList().Count == 0)
+                        {
+                            result += 1;
+                            chainIndexes.Add(shapeOnTop.index);
+                            shapesToCheck.Enqueue(fallingShapes[shapeOnTop.index]);
+                        }
+                    }
+                }
+            }
+        }
+        
         Console.WriteLine($"Part2: {result}");
     }
 }
